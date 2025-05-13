@@ -11,7 +11,7 @@ import { SubtarefaService } from './subtarefa.service';
 import { CreateSubtarefaDto } from './dto/create-subtarefa.dto';
 import { UpdateSubtarefaDto } from './dto/update-subtarefa.dto';
 
-@Controller('subtarefas')
+@Controller('subtasks')
 export class SubtarefaController {
   constructor(private readonly service: SubtarefaService) {}
 

@@ -16,11 +16,14 @@ export class TarefaService {
   }
 
   encontrarTodas(): Promise<Tarefa[]> {
-    return this.tarefaRepository.find();
+    return this.tarefaRepository.find({ relations: ['subtarefas'] });
   }
 
   async encontrarPorId(id: string): Promise<Tarefa> {
-    const tarefa = await this.tarefaRepository.findOne({ where: { id } });
+    const tarefa = await this.tarefaRepository.findOne({
+      where: { id },
+      relations: ['subtarefas'], // ← importante
+    });
     if (!tarefa) throw new NotFoundException('Tarefa não encontrada');
     return tarefa;
   }
