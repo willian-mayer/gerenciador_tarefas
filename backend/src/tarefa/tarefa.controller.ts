@@ -10,7 +10,7 @@ import {
 import { TarefaService } from './tarefa.service';
 import { Tarefa } from './tarefa.entity';
 
-@Controller('tarefas')
+@Controller('tasks')
 export class TarefaController {
   constructor(private readonly tarefaService: TarefaService) {}
 
