@@ -5,6 +5,8 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Subtarefa } from 'src/subtarefa/entities/subtarefa.entity';
+import { OneToMany } from 'typeorm';
 
 @Entity()
 export class Tarefa {
@@ -25,4 +27,9 @@ export class Tarefa {
 
   @UpdateDateColumn({ name: 'data_atualizacao' })
   dataAtualizacao: Date;
+
+  @OneToMany(() => Subtarefa, (subtarefa) => subtarefa.tarefa, {
+    cascade: true,
+  })
+  subtarefas: Subtarefa[];
 }
