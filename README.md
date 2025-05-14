@@ -14,7 +14,7 @@ Este é um aplicativo completo de gerenciamento de tarefas, com **frontend em Re
 
 ---
 
-## ✅ Pré-requisitos
+## Pré-requisitos
 
 Antes de começar, certifique-se de ter instalado em sua máquina:
 
@@ -77,6 +77,9 @@ npm install
 ```bash
 npm run dev
 ```
+
+Para acessar o aplicativo, acesse: http://localhost:3000
+
 
 ## Endpoints úteis
 
