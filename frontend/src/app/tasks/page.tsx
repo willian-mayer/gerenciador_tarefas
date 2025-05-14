@@ -24,16 +24,20 @@ export default function Home() {
   const [modalAberto, setModalAberto] = useState(false);
   const [modoEdicao, setModoEdicao] = useState(false);
   const [tarefaAtual, setTarefaAtual] = useState<Partial<Tarefa>>({});
+  const [usuario, setUsuario] = useState<{ nome: string } | null>(null);
 
   const router = useRouter();
 
   useEffect(() => {
-    const usuario = localStorage.getItem("usuarioLogado");
-    if (!usuario) router.push("/");
+    const usuarioData = localStorage.getItem("usuarioLogado");
+    if (!usuarioData) {
+      router.push("/");
+    } else {
+      const parsed = JSON.parse(usuarioData);
+      setUsuario(parsed);
+      carregarTarefas();
+    }
   }, [router]);
-  useEffect(() => {
-    carregarTarefas();
-  }, []);
 
   const carregarTarefas = async () => {
     try {
@@ -125,7 +129,7 @@ export default function Home() {
     await fetch(`http://localhost:3001/subtasks`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ titulo, tarefaId }), // Corrigido aqui
+      body: JSON.stringify({ titulo, tarefaId }),
     });
 
     await carregarTarefas();
@@ -148,30 +152,40 @@ export default function Home() {
   };
 
   return (
-    <main className="max-w-2xl mx-auto py-10 px-4">
-      <button
-        onClick={() => {
-          localStorage.removeItem("usuarioLogado");
-          router.push("/");
-        }}
-        className="text-sm text-red-600 underline mb-4"
-      >
-        🔓 Sair
-      </button>
-      <h1 className="text-3xl font-bold mb-6">📋 Minhas Tarefas</h1>
+    <main className="max-w-2xl mx-auto py-10 px-10 border-2 border-gray-200 shadow-xl my-10">
+      {usuario && (
+        <div className="mb-4 text-gray-700 flex justify-between">
+          <div>
+            <h1 className="text-3xl">
+              Bem-vindo <span className="font-semibold">{usuario.nome}</span>!
+            </h1>
+          </div>
+          <button
+            onClick={() => {
+              localStorage.removeItem("usuarioLogado");
+              router.push("/");
+            }}
+            className="text-sm text-white mb-4 bg-red-500 py-2 px-4 rounded font-semibold hover:bg-red-600"
+          >
+            Sair
+          </button>
+        </div>
+      )}
+
+      <h1 className="text-xl font-bold mb-6">Minhas Tarefas</h1>
 
       <button
         onClick={abrirModalCriar}
-        className="mb-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        className="mb-4 bg-blue-500 text-white px-4 py-2 rounded font-semibold hover:bg-blue-600"
       >
-        ➕ Nova Tarefa
+        Adicionar Tarefa
       </button>
 
       <ul className="space-y-4">
         {tarefas.map((tarefa) => (
           <li
             key={tarefa.id}
-            className="border rounded p-4 flex flex-col gap-2"
+            className="border-2 border-gray-200 rounded p-4 flex flex-col gap-2 shadow-xl"
           >
             <div className="flex justify-between items-center">
               <div>
@@ -189,20 +203,20 @@ export default function Home() {
               <div className="space-x-2">
                 <button
                   onClick={() => abrirModalEditar(tarefa)}
-                  className="text-sm text-green-600 hover:underline"
+                  className="text-sm text-white bg-green-500 font-semibold rounded py-2 px-4 hover:bg-green-600 "
                 >
-                  ✏️ Editar
+                  Editar
                 </button>
                 <button
                   onClick={() => excluirTarefa(tarefa.id)}
-                  className="text-sm text-red-600 hover:underline"
+                  className="text-sm text-white bg-red-500 font-semibold rounded py-2 px-4 hover:bg-red-600"
                 >
-                  🗑 Excluir
+                  Excluir
                 </button>
               </div>
             </div>
 
-            <ul className="ml-6 mt-2 space-y-1">
+            <ul className="mt-2 space-y-1 border-2 border-gray-200 p-4">
               {tarefa.subtarefas?.map((sub) => (
                 <li
                   key={sub.id}
@@ -221,7 +235,7 @@ export default function Home() {
                   </div>
                   <button
                     onClick={() => excluirSubtarefa(sub.id)}
-                    className="text-xs text-red-500 hover:underline"
+                    className="text-xs text-white bg-red-500 font-semibold rounded py-2 px-3 hover:bg-red-600"
                   >
                     🗑
                   </button>
@@ -230,9 +244,9 @@ export default function Home() {
               <li>
                 <button
                   onClick={() => adicionarSubtarefa(tarefa.id)}
-                  className="text-xs text-blue-600 hover:underline"
+                  className="text-xs mb-4 bg-blue-500 text-white px-4 py-2 rounded font-semibold hover:bg-blue-600"
                 >
-                  ➕ Adicionar subtarefa
+                  Adicionar subtarefa
                 </button>
               </li>
             </ul>
