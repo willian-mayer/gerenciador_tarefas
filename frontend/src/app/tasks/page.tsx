@@ -28,7 +28,7 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    const usuario = localStorage.getItem("usuario");
+    const usuario = localStorage.getItem("usuarioLogado");
     if (!usuario) router.push("/");
   }, [router]);
   useEffect(() => {
@@ -151,10 +151,10 @@ export default function Home() {
     <main className="max-w-2xl mx-auto py-10 px-4">
       <button
         onClick={() => {
-          localStorage.removeItem("usuario");
+          localStorage.removeItem("usuarioLogado");
           router.push("/");
         }}
-        className="mb-4 text-sm text-red-600 underline"
+        className="text-sm text-red-600 underline mb-4"
       >
         🔓 Sair
       </button>
