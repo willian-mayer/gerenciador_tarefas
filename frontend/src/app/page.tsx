@@ -3,11 +3,19 @@
 import { useEffect, useState } from 'react';
 import { Dialog } from '@headlessui/react';
 
+type Subtarefa = {
+  id: string;
+  titulo: string;
+  finalizada: boolean;
+  tarefa: { id: string }; // Corrigido
+};
+
 type Tarefa = {
   id: string;
   titulo: string;
   descricao: string;
   concluida: boolean;
+  subtarefas?: Subtarefa[];
 };
 
 export default function Home() {
@@ -21,9 +29,24 @@ export default function Home() {
   }, []);
 
   const carregarTarefas = async () => {
-    const res = await fetch('http://localhost:3001/tasks/');
-    const data = await res.json();
-    setTarefas(data);
+    try {
+      const resTarefas = await fetch('http://localhost:3001/tasks/');
+      const tarefas: Tarefa[] = await resTarefas.json();
+
+      const resSubs = await fetch('http://localhost:3001/subtasks/');
+      const todasSubtarefas: Subtarefa[] = await resSubs.json();
+
+      const tarefasComSubtarefas = tarefas.map((tarefa) => {
+        const subtarefas = todasSubtarefas.filter(
+          (sub) => sub.tarefa.id === tarefa.id // Corrigido
+        );
+        return { ...tarefa, subtarefas };
+      });
+
+      setTarefas(tarefasComSubtarefas);
+    } catch (error) {
+      console.error('Erro ao carregar tarefas ou subtarefas:', error);
+    }
   };
 
   const abrirModalCriar = () => {
@@ -79,11 +102,41 @@ export default function Home() {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        ...tarefa,
+        titulo: tarefa.titulo,
+        descricao: tarefa.descricao,
         concluida: !tarefa.concluida,
       }),
     });
 
+    await carregarTarefas();
+  };
+
+  const adicionarSubtarefa = async (tarefaId: string) => {
+    const titulo = prompt('Título da subtarefa:');
+    if (!titulo) return;
+
+    await fetch(`http://localhost:3001/subtasks`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ titulo, tarefaId }), // Corrigido aqui
+    });
+
+    await carregarTarefas();
+  };
+
+  const toggleSubtarefa = async (sub: Subtarefa) => {
+    await fetch(`http://localhost:3001/subtasks/${sub.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...sub, finalizada: !sub.finalizada }),
+    });
+
+    await carregarTarefas();
+  };
+
+  const excluirSubtarefa = async (id: string) => {
+    if (!confirm('Excluir esta subtarefa?')) return;
+    await fetch(`http://localhost:3001/subtasks/${id}`, { method: 'DELETE' });
     await carregarTarefas();
   };
 
@@ -100,41 +153,72 @@ export default function Home() {
 
       <ul className="space-y-4">
         {tarefas.map((tarefa) => (
-          <li
-            key={tarefa.id}
-            className="border rounded p-4 flex justify-between items-center"
-          >
-            <div>
-              <input
-                type="checkbox"
-                className="mr-2"
-                checked={tarefa.concluida}
-                onChange={() => toggleConcluida(tarefa)}
-              />
-              <strong className={tarefa.concluida ? 'line-through' : ''}>
-                {tarefa.titulo}
-              </strong>
-              <p className="text-sm text-gray-600">{tarefa.descricao}</p>
+          <li key={tarefa.id} className="border rounded p-4 flex flex-col gap-2">
+            <div className="flex justify-between items-center">
+              <div>
+                <input
+                  type="checkbox"
+                  className="mr-2"
+                  checked={tarefa.concluida}
+                  onChange={() => toggleConcluida(tarefa)}
+                />
+                <strong className={tarefa.concluida ? 'line-through' : ''}>
+                  {tarefa.titulo}
+                </strong>
+                <p className="text-sm text-gray-600">{tarefa.descricao}</p>
+              </div>
+              <div className="space-x-2">
+                <button
+                  onClick={() => abrirModalEditar(tarefa)}
+                  className="text-sm text-green-600 hover:underline"
+                >
+                  ✏️ Editar
+                </button>
+                <button
+                  onClick={() => excluirTarefa(tarefa.id)}
+                  className="text-sm text-red-600 hover:underline"
+                >
+                  🗑 Excluir
+                </button>
+              </div>
             </div>
-            <div className="space-x-2">
-              <button
-                onClick={() => abrirModalEditar(tarefa)}
-                className="text-sm text-green-600 hover:underline"
-              >
-                ✏️ Editar
-              </button>
-              <button
-                onClick={() => excluirTarefa(tarefa.id)}
-                className="text-sm text-red-600 hover:underline"
-              >
-                🗑 Excluir
-              </button>
-            </div>
+
+            <ul className="ml-6 mt-2 space-y-1">
+              {tarefa.subtarefas?.map((sub) => (
+                <li key={sub.id} className="flex items-center justify-between text-sm">
+                  <div>
+                    <input
+                      type="checkbox"
+                      checked={sub.finalizada}
+                      onChange={() => toggleSubtarefa(sub)}
+                      className="mr-2"
+                    />
+                    <span className={sub.finalizada ? 'line-through' : ''}>
+                      {sub.titulo}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => excluirSubtarefa(sub.id)}
+                    className="text-xs text-red-500 hover:underline"
+                  >
+                    🗑
+                  </button>
+                </li>
+              ))}
+              <li>
+                <button
+                  onClick={() => adicionarSubtarefa(tarefa.id)}
+                  className="text-xs text-blue-600 hover:underline"
+                >
+                  ➕ Adicionar subtarefa
+                </button>
+              </li>
+            </ul>
           </li>
         ))}
       </ul>
 
-      {/* Modal */}
+      {/* Modal de Tarefa */}
       <Dialog open={modalAberto} onClose={fecharModal} className="relative z-50">
         <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
         <div className="fixed inset-0 flex items-center justify-center p-4">
