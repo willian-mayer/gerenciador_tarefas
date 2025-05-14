@@ -8,7 +8,7 @@ type Subtarefa = {
   id: string;
   titulo: string;
   finalizada: boolean;
-  tarefa: { id: string }; // Corrigido
+  tarefa: { id: string }; 
 };
 
 type Tarefa = {
@@ -49,7 +49,7 @@ export default function Home() {
 
       const tarefasComSubtarefas = tarefas.map((tarefa) => {
         const subtarefas = todasSubtarefas.filter(
-          (sub) => sub.tarefa.id === tarefa.id // Corrigido
+          (sub) => sub.tarefa.id === tarefa.id 
         );
         return { ...tarefa, subtarefas };
       });
